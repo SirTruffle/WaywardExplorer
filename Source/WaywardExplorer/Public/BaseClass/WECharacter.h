@@ -6,10 +6,14 @@
 #include "GameFramework/Character.h"
 #include "WECharacter.generated.h"
 
+
 UCLASS()
 class WAYWARDEXPLORER_API AWECharacter : public ACharacter
 {
 	GENERATED_BODY()
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+	class UStatlineComponent* Statline;
 
 public:
 	// Sets default values for this character's properties
@@ -18,6 +22,14 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	bool CanJump() const;
+	void HasJumped();
+
+	bool CanSprint() const;
+	void SetSprint(const bool& IsSprinting);
+
+	bool CanChannel() const;
+	void SetChanneling(const bool& IsChanneling);
 
 public:	
 	// Called every frame

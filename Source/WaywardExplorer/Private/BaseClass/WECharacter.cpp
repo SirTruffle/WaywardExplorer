@@ -2,12 +2,16 @@
 
 
 #include "BaseClass/WECharacter.h"
+#include "Components/StatlineComponent.h"
 
 // Sets default values
 AWECharacter::AWECharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	Statline = CreateDefaultSubobject<UStatlineComponent>(TEXT("Statline"));
+	Statline->SetMovementCompReference(GetCharacterMovement());
 
 }
 
@@ -16,6 +20,37 @@ void AWECharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+}
+
+bool AWECharacter::CanJump() const
+{
+	return Statline->Canjump();
+}
+
+void AWECharacter::HasJumped()
+{
+	Statline->HasJumped();
+	ACharacter::Jump();
+}
+
+bool AWECharacter::CanSprint() const
+{
+	return Statline->CanSprint();
+}
+
+void AWECharacter::SetSprint(const bool& IsSprinting)
+{
+	Statline->SetSprinting(IsSprinting);
+}
+
+bool AWECharacter::CanChannel() const
+{
+	return Statline->CanChannel();
+}
+
+void AWECharacter::SetChanneling(const bool& IsChanneling)
+{
+	Statline->SetChanneling(IsChanneling);
 }
 
 // Called every frame

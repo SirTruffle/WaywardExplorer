@@ -52,55 +52,69 @@ AWEPlayerCharacter::AWEPlayerCharacter()
 
 void AWEPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 
-		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AWEPlayerCharacter::PlayerJump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-
-		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AWEPlayerCharacter::Move);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AWEPlayerCharacter::Look);
-
-		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AWEPlayerCharacter::Look);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &AWEPlayerCharacter::SprintOn);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AWEPlayerCharacter::SprintOff);
+		EnhancedInputComponent->BindAction(ChannelAction, ETriggerEvent::Started, this, &AWEPlayerCharacter::ChannelingOn);
+		EnhancedInputComponent->BindAction(ChannelAction, ETriggerEvent::Completed, this, &AWEPlayerCharacter::ChannelingOff);
 	}
 }
 
 void AWEPlayerCharacter::Move(const FInputActionValue& Value)
 {
-	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
-
-	// route the input
 	DoMove(MovementVector.X, MovementVector.Y);
 }
 
 void AWEPlayerCharacter::Look(const FInputActionValue& Value)
 {
-	// input is a Vector2D
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
-
-	// route the input
 	DoLook(LookAxisVector.X, LookAxisVector.Y);
+}
+
+void AWEPlayerCharacter::PlayerJump()
+{
+	if (AWEPlayerCharacter::CanJump())
+	{
+		AWEPlayerCharacter::HasJumped();
+	}
+}
+
+void AWEPlayerCharacter::SprintOn()
+{
+	SetSprint(true);
+}
+
+void AWEPlayerCharacter::SprintOff()
+{
+	SetSprint(false);
+}
+
+void AWEPlayerCharacter::ChannelingOn()
+{
+	SetChanneling(true);
+}
+
+void AWEPlayerCharacter::ChannelingOff()
+{
+	SetChanneling(false);
 }
 
 void AWEPlayerCharacter::DoMove(float Right, float Forward)
 {
 	if (GetController() != nullptr)
 	{
-		// find out which way is forward
 		const FRotator Rotation = GetController()->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get forward vector
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
-		// get right vector 
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-		// add movement 
 		AddMovementInput(ForwardDirection, Forward);
 		AddMovementInput(RightDirection, Right);
 	}
