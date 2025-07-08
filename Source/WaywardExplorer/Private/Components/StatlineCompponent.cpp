@@ -42,7 +42,7 @@ void UStatlineCompponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	}
 }
 
-float UStatlineCompponent::GetStatPercentile(const ECorestat& Stat) const
+float UStatlineCompponent::GetStatPercentile(const ECorestat Stat) const
 {
 	switch (Stat)
 	{

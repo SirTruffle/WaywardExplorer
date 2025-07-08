@@ -75,7 +75,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Core Stats")
-	float GetStatPercentile(const ECorestat& Stat) const;
+	float GetStatPercentile(const ECorestat Stat) const;
 
 protected:
 	virtual void BeginPlay() override;
