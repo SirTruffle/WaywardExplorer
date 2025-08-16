@@ -63,6 +63,8 @@ void AWEPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AWEPlayerCharacter::SprintOff);
 		EnhancedInputComponent->BindAction(ChannelAction, ETriggerEvent::Started, this, &AWEPlayerCharacter::ChannelingOn);
 		EnhancedInputComponent->BindAction(ChannelAction, ETriggerEvent::Completed, this, &AWEPlayerCharacter::ChannelingOff);
+		EnhancedInputComponent->BindAction(SneakAction, ETriggerEvent::Started, this, &AWEPlayerCharacter::SneakOn);
+		EnhancedInputComponent->BindAction(SneakAction, ETriggerEvent::Completed, this, &AWEPlayerCharacter::SneakOff);
 	}
 }
 
@@ -80,7 +82,7 @@ void AWEPlayerCharacter::Look(const FInputActionValue& Value)
 
 void AWEPlayerCharacter::PlayerJump()
 {
-	if (AWEPlayerCharacter::CanJump())
+	if (AWEPlayerCharacter::CanJump() && !GetMovementComponent()->IsFalling())
 	{
 		AWEPlayerCharacter::HasJumped();
 	}
@@ -104,6 +106,16 @@ void AWEPlayerCharacter::ChannelingOn()
 void AWEPlayerCharacter::ChannelingOff()
 {
 	SetChanneling(false);
+}
+
+void AWEPlayerCharacter::SneakOn()
+{
+	SetSneaking(true);
+}
+
+void AWEPlayerCharacter::SneakOff()
+{
+	SetSneaking(false);
 }
 
 void AWEPlayerCharacter::DoMove(float Right, float Forward)

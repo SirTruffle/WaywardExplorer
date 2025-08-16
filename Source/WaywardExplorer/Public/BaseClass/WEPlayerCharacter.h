@@ -54,6 +54,9 @@ protected:
 
 	void ChannelingOn();
 	void ChannelingOff();
+
+	void SneakOn();
+	void SneakOff();
 	
 private:
 
@@ -87,5 +90,8 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* ChannelAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* SneakAction;
 #pragma endregion
 };

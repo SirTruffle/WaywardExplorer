@@ -3,6 +3,7 @@
 
 #include "Components/StatlineComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "WEUtils.h"
 
 
 UStatlineComponent::UStatlineComponent()
@@ -42,15 +43,23 @@ void UStatlineComponent::SetMovementCompReference(UCharacterMovementComponent* C
 #pragma region sprinting
 void UStatlineComponent::TickStamina(const float& DeltaTime)
 {
+	if (CurrentStaminaExhaustion > 0.0)
+	{
+		CurrentStaminaExhaustion -= DeltaTime;
+		return;
+	}
+
 	if (bIsSprinting && IsValidSprinting())
 	{
 		Stamina.TickStat(0 - (DeltaTime * SprintCostMultiplier));
 		if (Stamina.GetCurrent() <= 0.0)
 		{
 			SetSprinting(false);
+			CurrentStaminaExhaustion = SecTriggerStamineExhaustion;
 		}
 		return;
 	}
+	
 	Stamina.TickStat(DeltaTime);
 }
 
@@ -67,7 +76,23 @@ bool UStatlineComponent::CanSprint() const
 void UStatlineComponent::SetSprinting(const bool& IsSprinting)
 {
 	bIsSprinting = IsSprinting;
+	if (bIsSneaking && bIsSprinting)
+	{
+		return; // Prevent sprinting while sneaking
+	}
+	bIsSneaking = false; // Ensure sneaking is disabled when sprinting
 	OwningCharMovementComp->MaxWalkSpeed = IsSprinting ? SprintSpeed : WalkSpeed;
+}
+
+void UStatlineComponent::SetSneaking(const bool& IsSneaking)
+{
+	bIsSneaking = IsSneaking;
+	if (bIsSprinting && bIsSneaking)
+	{
+		return; // Prevent sneaking while sprinting
+	}
+	bIsSprinting = false; // Ensure sprinting is disabled when sneaking
+	OwningCharMovementComp->MaxWalkSpeed = IsSneaking ? SneakSpeed : WalkSpeed;
 }
 #pragma endregion
 //------------------------------------------------------------------------------------------------------------------------------------
@@ -88,18 +113,33 @@ void UStatlineComponent::TickMana(const float& DeltaTime)
 {
 	if (bIsChanneling && IsValidChanneling())
 	{
-		Mana.TickStat(0 - (DeltaTime * ManaCostMultiplier));
-		if (Mana.GetCurrent() <= 0.0)
+		float ManaCost = DeltaTime * ManaCostMultiplier;
+		Mana.TickStat(-ManaCost); // Drain mana
+		ManaUsedThisChannel += ManaCost;
+
+		if (Mana.GetCurrent() <= 0.0f)
 		{
 			SetChanneling(false);
+			FinalizeChannelStrength(); // Finish up
 		}
 		return;
 	}
 	Mana.TickStat(DeltaTime);
 }
+
+void UStatlineComponent::FinalizeChannelStrength()
+{
+	ChannelStrength = ManaUsedThisChannel * ChannelMultiplier;
+	ManaUsedThisChannel = 0.0f; // Reset for next time
+}
+
 bool UStatlineComponent::IsValidChanneling() const
 {
-	return true;
+	if (Mana.GetCurrent() > 0.0)
+	{
+		return true;
+	}
+	return false;
 }
 
 bool UStatlineComponent::CanChannel() const
@@ -111,8 +151,45 @@ void UStatlineComponent::SetChanneling(const bool& IsChanneling)
 {
 	bIsChanneling = IsChanneling;
 }
+
 #pragma endregion
 //------------------------------------------------------------------------------------------------------------------------------------
+
+FSaveComponentData UStatlineComponent::GetComponentSaveData_Implementation()
+{
+	FSaveComponentData Ret;
+	Ret.ComponentClass = this->GetClass();		
+	Ret.RawData.Add(Health.GetSaveString());	// Index 0
+	Ret.RawData.Add(Stamina.GetSaveString());	// Index 1
+	Ret.RawData.Add(Mana.GetSaveString());		// Index 2
+	// Any additional rwadata add needs to be included in the SetComponentSaveData_Implementation function.
+
+	return Ret;
+}
+void UStatlineComponent::SetComponentSaveData_Implementation(FSaveComponentData Data)
+{
+	TArray<FString> Parts;
+	for (int i = 0; i < Data.RawData.Num(); i++)
+	{
+		Parts.Empty();
+		Parts = ChopString(Data.RawData[i], '|');
+		switch (i)
+		{
+		case 0:
+			Health.UpdateFromSaveString(Parts);
+			break;
+		case 1:
+			Stamina.UpdateFromSaveString(Parts);
+			break;
+		case 2:
+			Mana.UpdateFromSaveString(Parts);
+			break;
+		default:
+			// Log error
+			break;
+		}
+	}
+}
 
 float UStatlineComponent::GetStatPercentile(const ECorestat Stat) const
 {

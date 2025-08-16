@@ -13,13 +13,19 @@ AWECharacter::AWECharacter()
 	Statline = CreateDefaultSubobject<UStatlineComponent>(TEXT("Statline"));
 	Statline->SetMovementCompReference(GetCharacterMovement());
 
+	SaveActorID = FGuid::NewGuid();
+
 }
 
 // Called when the game starts or when spawned
 void AWECharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if (!SaveActorID.IsValid())
+	{
+		SaveActorID = FGuid::NewGuid();
+	}
 }
 
 bool AWECharacter::CanJump() const
@@ -53,6 +59,11 @@ void AWECharacter::SetChanneling(const bool& IsChanneling)
 	Statline->SetChanneling(IsChanneling);
 }
 
+void AWECharacter::SetSneaking(const bool& IsSneaking)
+{
+	Statline->SetSneaking(IsSneaking);
+}
+
 // Called every frame
 void AWECharacter::Tick(float DeltaTime)
 {
@@ -65,5 +76,20 @@ void AWECharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+FGuid AWECharacter::GetActorSaveID_Implementation()
+{
+	return SaveActorID;
+}
+
+FSaveActorData AWECharacter::GetSaveData_Implementation()
+{
+	FSaveActorData Ret;
+	Ret.ActorClass = this->GetClass();
+	Ret.ActorTransform = this->GetTransform();
+	Ret.WasSpawned = this->WasSpawned;
+
+	return Ret;
 }
 
